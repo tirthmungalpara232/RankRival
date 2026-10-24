@@ -1,0 +1,24 @@
+{
+  "name": "cricket-dbms-project",
+  "version": "1.0.0",
+  "description": "Full-Stack Cricket Sports Database Management Web App with React, Node.js, Express, and MariaDB/MySQL/SQLite",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "server": "node server/index.js",
+    "client": "npm --prefix client run dev",
+    "init-db": "node server/initDb.js",
+    "build": "npm --prefix client run build"
+  },
+  "keywords": [
+    "cricket",
+    "dbms",
+    "react",
+    "node",
+    "express",
+    "mysql",
+    "sqlite"
+  ],
+  "author": "Cricket DBMS Pro",
+  "license": "ISC"
+}
