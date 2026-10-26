@@ -1,6 +1,6 @@
 # 🏏 CricSphere Pro — Full-Stack Cricket Sports Database Management System
 
-A production-grade, state-of-the-art Cricket Sports Management & Tournament Administration Web Application built with **React**, **Node.js**, **Express**, and a dual **MySQL/MariaDB & SQLite** relational database architecture.
+A production-grade, state-of-the-art Cricket Sports Management & Tournament Administration Web Application built with **React**, **Node.js**, **Express**, and **MySQL/MariaDB** relational database architecture.
 
 ---
 
