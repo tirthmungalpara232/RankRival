@@ -168,7 +168,7 @@ export default function Navbar({
               </button>
 
               <button 
-                className="btn btn-secondary btn-sm nav-logout-btn"
+                className="btn btn-secondary nav-logout-btn !w-11 !h-11 flex items-center justify-center rounded-lg hover:border-red-500/50 hover:text-red-400 transition-colors flex-shrink-0"
                 onClick={() => {
                   setMobileMenuOpen(false);
                   onLogout();
@@ -176,7 +176,7 @@ export default function Navbar({
                 title="Sign Out"
                 aria-label="Sign Out"
               >
-                <LogOut size={15} />
+                <LogOut size={22} />
               </button>
             </div>
           ) : (

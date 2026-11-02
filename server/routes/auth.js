@@ -23,7 +23,7 @@ router.post('/register', async (req, res) => {
       avatar = null
     } = req.body;
 
-    if (!username || !email || !password || !full_name) {
+    if (!username || !email || !password || !full_name ) {
       return res.status(400).json({ error: 'Username, email, password, and full name are required.' });
     }
 
