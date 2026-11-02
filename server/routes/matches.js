@@ -36,8 +36,16 @@ router.get('/:id', async (req, res) => {
     const balls = await db.call('sp_GetMatchBallByBall', [matchId]);
     const umpires = await db.call('sp_GetMatchOfficials', [matchId]);
     const commentators = await db.call('sp_GetMatchCommentators', [matchId]);
-    const team1Squad = await db.call('sp_GetTeamSquad', [matchInfo.team1_id]);
-    const team2Squad = await db.call('sp_GetTeamSquad', [matchInfo.team2_id]);
+    const rawTeam1Squad = await db.call('sp_GetTeamSquad', [matchInfo.team1_id]);
+    const rawTeam2Squad = await db.call('sp_GetTeamSquad', [matchInfo.team2_id]);
+
+    const formatSquad = (squad) => (squad || []).map(p => ({
+      ...p,
+      player_name: p.player_name || `${p.first_name || ''} ${p.last_name || ''}`.trim() || `Player #${p.player_id}`
+    }));
+
+    const team1Squad = formatSquad(rawTeam1Squad);
+    const team2Squad = formatSquad(rawTeam2Squad);
 
     res.json({
       match: matchInfo,

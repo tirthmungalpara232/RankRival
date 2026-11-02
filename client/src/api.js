@@ -78,10 +78,6 @@ export const api = {
   getLeaderboard: (category = 'orange_cap', tournamentId = 'all') => 
     apiFetch(`/leaderboards?category=${category}&tournament_id=${tournamentId}`),
 
-  // Earnings
-  getEarningsSummary: () => apiFetch('/earnings/summary'),
-  awardPrizeMoney: (data) => apiFetch('/earnings/award', { method: 'POST', body: JSON.stringify(data) }),
-
   // Players
   getPlayers: (params = '') => apiFetch(`/players${params}`),
   getPlayer: (id) => apiFetch(`/players/${id}`),

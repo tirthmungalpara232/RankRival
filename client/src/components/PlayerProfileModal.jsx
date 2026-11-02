@@ -3,21 +3,18 @@ import {
   X, 
   Trophy, 
   Award, 
-  CircleDollarSign, 
   Shield, 
   Activity, 
   Calendar, 
   Star, 
-  Flame, 
-  FileText,
-  UserCheck
+  FileText
 } from 'lucide-react';
 import { api } from '../api';
 
 export default function PlayerProfileModal({ isOpen, onClose, playerId, onOpenCompare }) {
   const [playerData, setPlayerData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('tournaments'); // 'tournaments', 'earnings', 'matches', 'stats'
+  const [activeTab, setActiveTab] = useState('tournaments'); // 'tournaments', 'matches', 'stats'
 
   useEffect(() => {
     if (isOpen && playerId) {
@@ -42,37 +39,35 @@ export default function PlayerProfileModal({ isOpen, onClose, playerId, onOpenCo
   const player = playerData?.player;
   const career = playerData?.careerStats;
   const tourHistory = playerData?.tournamentHistory || [];
-  const earnings = playerData?.earningsLedger || [];
   const matchLogs = playerData?.matchLogs || [];
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-card" onClick={e => e.stopPropagation()} style={{ maxWidth: '880px', padding: '28px' }}>
+      <div className="modal-card" onClick={e => e.stopPropagation()} style={{ maxWidth: '880px', padding: '24px' }}>
         <div className="modal-header" style={{ marginBottom: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
             <div style={{
-              width: '56px',
-              height: '56px',
-              borderRadius: '16px',
+              width: '50px',
+              height: '50px',
+              borderRadius: '14px',
               background: 'linear-gradient(135deg, #00e676, #00b0ff)',
               color: '#040912',
-              fontSize: '24px',
+              fontSize: '20px',
               fontWeight: '900',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 0 16px rgba(0, 230, 118, 0.3)'
+              justifyContent: 'center'
             }}>
               {player?.jersey_number ? `#${player.jersey_number}` : (player?.first_name?.charAt(0) || 'P')}
             </div>
 
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <h2 style={{ fontSize: '24px' }}>{player?.first_name} {player?.last_name}</h2>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <h2 style={{ fontSize: '22px' }}>{player?.first_name} {player?.last_name}</h2>
                 <span className="badge badge-green">{player?.player_role}</span>
                 <span className="badge badge-gold">{player?.country_name}</span>
               </div>
-              <div style={{ fontSize: '13px', color: 'var(--text-secondary)', display: 'flex', gap: '14px', marginTop: '4px' }}>
+              <div style={{ fontSize: '13px', color: 'var(--text-secondary)', display: 'flex', gap: '14px', marginTop: '4px', flexWrap: 'wrap' }}>
                 <span>🛡️ {player?.team_name || 'Free Agent'}</span>
                 <span>🏏 Bat: {player?.batting_style || 'Right-hand'}</span>
                 <span>⚾ Bowl: {player?.bowling_style || 'N/A'}</span>
@@ -97,41 +92,41 @@ export default function PlayerProfileModal({ isOpen, onClose, playerId, onOpenCo
 
         {loading ? (
           <div style={{ padding: '60px', textAlign: 'center', color: 'var(--text-secondary)' }}>
-            Loading player performance records and earnings...
+            Loading player career performance records...
           </div>
         ) : (
           <>
             {/* Top Quick Numbers Bar */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))',
               gap: '10px',
               marginBottom: '20px'
             }}>
               <div style={{ background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)', textAlign: 'center' }}>
                 <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Matches</div>
-                <div style={{ fontSize: '22px', fontWeight: '800', fontFamily: 'var(--font-display)' }}>{career?.matches_played || 0}</div>
+                <div style={{ fontSize: '22px', fontWeight: '800', fontFamily: 'var(--font-mono)' }}>{career?.matches_played || 0}</div>
               </div>
 
               <div style={{ background: 'rgba(255, 119, 0, 0.08)', padding: '12px', borderRadius: 'var(--radius-md)', border: '1px solid rgba(255, 119, 0, 0.3)', textAlign: 'center' }}>
                 <div style={{ fontSize: '11px', color: 'var(--orange-cap)', textTransform: 'uppercase' }}>Total Runs</div>
-                <div style={{ fontSize: '22px', fontWeight: '800', color: 'var(--orange-cap)', fontFamily: 'var(--font-display)' }}>{career?.total_runs || 0}</div>
+                <div style={{ fontSize: '22px', fontWeight: '800', color: 'var(--orange-cap)', fontFamily: 'var(--font-mono)' }}>{career?.total_runs || 0}</div>
               </div>
 
               <div style={{ background: 'rgba(168, 85, 247, 0.08)', padding: '12px', borderRadius: 'var(--radius-md)', border: '1px solid rgba(168, 85, 247, 0.3)', textAlign: 'center' }}>
                 <div style={{ fontSize: '11px', color: 'var(--purple-cap)', textTransform: 'uppercase' }}>Wickets</div>
-                <div style={{ fontSize: '22px', fontWeight: '800', color: 'var(--purple-cap)', fontFamily: 'var(--font-display)' }}>{career?.total_wickets || 0}</div>
+                <div style={{ fontSize: '22px', fontWeight: '800', color: 'var(--purple-cap)', fontFamily: 'var(--font-mono)' }}>{career?.total_wickets || 0}</div>
               </div>
 
               <div style={{ background: 'rgba(0, 229, 255, 0.08)', padding: '12px', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0, 229, 255, 0.3)', textAlign: 'center' }}>
                 <div style={{ fontSize: '11px', color: 'var(--accent-cyan)', textTransform: 'uppercase' }}>Catches</div>
-                <div style={{ fontSize: '22px', fontWeight: '800', color: 'var(--accent-cyan)', fontFamily: 'var(--font-display)' }}>{career?.total_catches || 0}</div>
+                <div style={{ fontSize: '22px', fontWeight: '800', color: 'var(--accent-cyan)', fontFamily: 'var(--font-mono)' }}>{career?.total_catches || 0}</div>
               </div>
 
-              <div style={{ background: 'rgba(255, 209, 102, 0.1)', padding: '12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-gold)', textAlign: 'center' }}>
-                <div style={{ fontSize: '11px', color: 'var(--accent-gold)', textTransform: 'uppercase' }}>Total Earnings</div>
-                <div style={{ fontSize: '20px', fontWeight: '800', color: 'var(--accent-gold)', fontFamily: 'var(--font-display)' }}>
-                  ${Number(career?.total_earnings || 0).toLocaleString()}
+              <div style={{ background: 'rgba(255, 209, 102, 0.08)', padding: '12px', borderRadius: 'var(--radius-md)', border: '1px solid rgba(255, 209, 102, 0.3)', textAlign: 'center' }}>
+                <div style={{ fontSize: '11px', color: 'var(--accent-gold)', textTransform: 'uppercase' }}>POM Awards</div>
+                <div style={{ fontSize: '22px', fontWeight: '800', color: 'var(--accent-gold)', fontFamily: 'var(--font-mono)' }}>
+                  ⭐ {career?.pom_awards || 0}
                 </div>
               </div>
             </div>
@@ -143,13 +138,6 @@ export default function PlayerProfileModal({ isOpen, onClose, playerId, onOpenCo
                 onClick={() => setActiveTab('tournaments')}
               >
                 <Trophy size={16} /> Tournament Records ({tourHistory.length})
-              </button>
-
-              <button 
-                className={`tab-btn ${activeTab === 'earnings' ? 'active' : ''}`}
-                onClick={() => setActiveTab('earnings')}
-              >
-                <CircleDollarSign size={16} /> Prize Purse Ledger ({earnings.length})
               </button>
 
               <button 
@@ -170,10 +158,10 @@ export default function PlayerProfileModal({ isOpen, onClose, playerId, onOpenCo
             {/* TAB 1: TOURNAMENT PARTICIPATION & PERFORMANCE */}
             {activeTab === 'tournaments' && (
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
                   <h4 style={{ fontSize: '15px' }}>Tournament Performance History</h4>
                   <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                    Detailed breakdown of runs, wickets, catches, and earnings by tournament
+                    Runs, wickets, catches, and awards by tournament
                   </span>
                 </div>
 
@@ -196,7 +184,6 @@ export default function PlayerProfileModal({ isOpen, onClose, playerId, onOpenCo
                           <th>Econ</th>
                           <th>Catches</th>
                           <th>POM</th>
-                          <th>Tournament Earnings</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -212,9 +199,6 @@ export default function PlayerProfileModal({ isOpen, onClose, playerId, onOpenCo
                             <td>{th.economy}</td>
                             <td style={{ fontWeight: '700', color: 'var(--accent-cyan)' }}>{th.catches}</td>
                             <td>{th.pom_count > 0 ? `⭐ ${th.pom_count}` : '-'}</td>
-                            <td style={{ fontWeight: '800', color: 'var(--accent-gold)' }}>
-                              ${Number(th.tournament_earnings).toLocaleString()}
-                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -224,59 +208,7 @@ export default function PlayerProfileModal({ isOpen, onClose, playerId, onOpenCo
               </div>
             )}
 
-            {/* TAB 2: FINANCIAL EARNINGS LEDGER */}
-            {activeTab === 'earnings' && (
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                  <h4 style={{ fontSize: '15px' }}>Earnings & Prize Money Ledger</h4>
-                  <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--accent-gold)' }}>
-                    Career Purse: ${Number(career?.total_earnings || 0).toLocaleString()} USD
-                  </div>
-                </div>
-
-                {earnings.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>
-                    No earnings entries recorded yet.
-                  </div>
-                ) : (
-                  <div className="table-container">
-                    <table className="custom-table">
-                      <thead>
-                        <tr>
-                          <th>Date</th>
-                          <th>Tournament</th>
-                          <th>Earning Type</th>
-                          <th>Amount</th>
-                          <th>Description</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {earnings.map(e => (
-                          <tr key={e.earning_id}>
-                            <td style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{e.date_awarded}</td>
-                            <td style={{ fontWeight: '600' }}>{e.tournament_name}</td>
-                            <td>
-                              <span className={`badge ${
-                                e.earning_type.includes('Prize') ? 'badge-gold' : 
-                                e.earning_type.includes('Match') ? 'badge-green' : 'badge-orange'
-                              }`}>
-                                {e.earning_type}
-                              </span>
-                            </td>
-                            <td style={{ fontWeight: '800', color: 'var(--accent-gold)' }}>
-                              +${Number(e.amount).toLocaleString()} {e.currency}
-                            </td>
-                            <td style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{e.description}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* TAB 3: MATCH-BY-MATCH LOGS */}
+            {/* TAB 2: MATCH-BY-MATCH LOGS */}
             {activeTab === 'matches' && (
               <div>
                 <h4 style={{ fontSize: '15px', marginBottom: '12px' }}>Recent Match Logs</h4>
@@ -325,9 +257,9 @@ export default function PlayerProfileModal({ isOpen, onClose, playerId, onOpenCo
               </div>
             )}
 
-            {/* TAB 4: FULL CAREER STATS */}
+            {/* TAB 3: FULL CAREER STATS */}
             {activeTab === 'stats' && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
                 {/* Batting Card */}
                 <div style={{ background: 'rgba(255,255,255,0.02)', padding: '18px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
                   <h4 style={{ color: 'var(--orange-cap)', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>

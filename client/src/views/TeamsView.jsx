@@ -164,9 +164,10 @@ export default function TeamsView({ onOpenPlayer }) {
                         <th>Role</th>
                         <th>Batting Style</th>
                         <th>Bowling Style</th>
+                        <th>Matches</th>
                         <th>Career Runs</th>
                         <th>Wickets</th>
-                        <th>Earnings</th>
+                        <th>Catches</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -188,11 +189,10 @@ export default function TeamsView({ onOpenPlayer }) {
                           <td><span className="badge badge-green" style={{ fontSize: '10px' }}>{p.player_role}</span></td>
                           <td style={{ fontSize: '12px' }}>{p.batting_style}</td>
                           <td style={{ fontSize: '12px' }}>{p.bowling_style || 'N/A'}</td>
+                          <td>{p.matches_played || 0}</td>
                           <td style={{ fontWeight: '700', color: 'var(--orange-cap)' }}>{p.total_runs}</td>
                           <td style={{ fontWeight: '700', color: 'var(--purple-cap)' }}>{p.total_wickets}</td>
-                          <td style={{ fontWeight: '800', color: 'var(--accent-gold)' }}>
-                            ${Number(p.total_earnings).toLocaleString()}
-                          </td>
+                          <td style={{ fontWeight: '700', color: 'var(--accent-cyan)' }}>{p.total_catches || 0}</td>
                         </tr>
                       ))}
                     </tbody>

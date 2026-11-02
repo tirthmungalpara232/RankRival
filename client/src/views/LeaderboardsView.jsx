@@ -2,9 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Award, 
   Trophy, 
-  Flame, 
   Zap, 
-  CircleDollarSign, 
   Shield, 
   Search,
   Star,
@@ -49,7 +47,6 @@ export default function LeaderboardsView({ onOpenPlayer }) {
   }
 
   const top3 = leaderboardData.slice(0, 3);
-  const rest = leaderboardData.slice(3);
 
   const categoryDetails = {
     orange_cap: {
@@ -91,23 +88,6 @@ export default function LeaderboardsView({ onOpenPlayer }) {
       metricLabel: 'Catches',
       metricKey: 'catches',
       icon: '🧤'
-    },
-    earnings: {
-      title: 'Prize Money Hub — Highest Career & Tournament Earners',
-      badge: 'badge-gold',
-      color: 'var(--accent-gold)',
-      metricLabel: 'Total Earned',
-      metricKey: 'total_earnings',
-      isCurrency: true,
-      icon: '💰'
-    },
-    mvp: {
-      title: 'Most Valuable Player (MVP Points Rating)',
-      badge: 'badge-green',
-      color: 'var(--accent-green)',
-      metricLabel: 'MVP Index',
-      metricKey: 'mvp_points',
-      icon: '⭐'
     }
   };
 
@@ -118,24 +98,24 @@ export default function LeaderboardsView({ onOpenPlayer }) {
       {/* Header & Tournament Filter */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '14px' }}>
         <div>
-          <h2 style={{ fontSize: '28px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <Award size={28} color="var(--accent-green)" /> The Cricket Honors Board
+          <h2 style={{ fontSize: '26px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <Award size={26} color="var(--accent-green)" /> Cricket Honors Board
           </h2>
-          <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
-            Official rankings across runs, strike rates, wickets, catches, earnings, and MVP points
+          <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+            Tournament performance rankings across runs, wickets, strike rate, boundaries, and catches
           </p>
         </div>
 
         {/* Tournament Filter Dropdown */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: '600' }}>Filter Tournament:</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', width: '100%', maxWidth: '360px' }}>
+          <span style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: '600' }}>Filter:</span>
           <select 
             className="form-select"
-            style={{ width: '260px' }}
+            style={{ flex: 1, minWidth: '200px' }}
             value={tournamentId}
             onChange={e => setTournamentId(e.target.value)}
           >
-            <option value="all">🏆 All Tournaments (All-Time Career)</option>
+            <option value="all">🏆 All Tournaments (Career Aggregate)</option>
             {tournaments.map(t => (
               <option key={t.tournament_id} value={t.tournament_id}>
                 {t.tournament_name}
@@ -145,28 +125,27 @@ export default function LeaderboardsView({ onOpenPlayer }) {
         </div>
       </div>
 
-      {/* Categories Selector Tabs */}
+      {/* Categories Selector Tabs - Only Pure Cricket Categories */}
       <div style={{
         display: 'flex',
         gap: '8px',
         overflowX: 'auto',
         paddingBottom: '12px',
-        marginBottom: '28px'
+        marginBottom: '24px',
+        WebkitOverflowScrolling: 'touch'
       }}>
         {[
           { id: 'orange_cap', label: '🟠 Orange Cap (Runs)' },
           { id: 'purple_cap', label: '🟣 Purple Cap (Wickets)' },
           { id: 'strike_rate', label: '⚡ Highest Strike Rate' },
           { id: 'sixes', label: '🚀 Maximum Sixes' },
-          { id: 'fielding', label: '🧤 Most Catches' },
-          { id: 'earnings', label: '💰 Top Earners ($)' },
-          { id: 'mvp', label: '⭐ MVP Index' }
+          { id: 'fielding', label: '🧤 Most Catches' }
         ].map(cat => (
           <button
             key={cat.id}
             onClick={() => setCategory(cat.id)}
             className={`btn btn-sm ${category === cat.id ? 'btn-primary' : 'btn-secondary'}`}
-            style={{ whiteSpace: 'nowrap', padding: '8px 16px', fontWeight: category === cat.id ? '800' : '600' }}
+            style={{ whiteSpace: 'nowrap', padding: '8px 16px', fontWeight: category === cat.id ? '800' : '600', flexShrink: 0 }}
           >
             {cat.label}
           </button>
@@ -186,14 +165,13 @@ export default function LeaderboardsView({ onOpenPlayer }) {
           {/* TOP 3 PODIUM */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-            gap: '18px',
-            marginBottom: '32px'
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gap: '16px',
+            marginBottom: '28px'
           }}>
             {top3.map((player, idx) => {
               const rank = idx + 1;
               const val = player[currentCat.metricKey];
-              const displayVal = currentCat.isCurrency ? `$${Number(val).toLocaleString()}` : val;
               const isGold = rank === 1;
 
               return (
@@ -202,10 +180,10 @@ export default function LeaderboardsView({ onOpenPlayer }) {
                   className="card card-clickable"
                   onClick={() => onOpenPlayer(player.player_id)}
                   style={{
-                    padding: '24px',
+                    padding: '20px',
                     textAlign: 'center',
                     background: isGold 
-                      ? 'linear-gradient(135deg, rgba(255, 209, 102, 0.14), rgba(18, 28, 48, 0.9))'
+                      ? 'linear-gradient(135deg, rgba(255, 209, 102, 0.12), rgba(18, 28, 48, 0.9))'
                       : 'var(--bg-card)',
                     borderColor: isGold ? 'var(--border-gold)' : 'var(--border-subtle)',
                     position: 'relative'
@@ -218,18 +196,17 @@ export default function LeaderboardsView({ onOpenPlayer }) {
                     background: isGold ? 'var(--accent-gold)' : (rank === 2 ? '#94a3b8' : '#cd7f32'),
                     color: '#000',
                     fontWeight: '900',
-                    fontSize: '16px',
+                    fontSize: '15px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    margin: '0 auto 12px',
-                    boxShadow: isGold ? 'var(--shadow-glow-gold)' : 'none'
+                    margin: '0 auto 10px'
                   }}>
                     {rank === 1 ? '👑' : `#${rank}`}
                   </div>
 
-                  <h3 style={{ fontSize: '18px', marginBottom: '4px' }}>{player.player_name}</h3>
-                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '14px' }}>
+                  <h3 style={{ fontSize: '17px', marginBottom: '4px' }}>{player.player_name}</h3>
+                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
                     {player.player_role} • {player.team_name}
                   </div>
 
@@ -240,7 +217,7 @@ export default function LeaderboardsView({ onOpenPlayer }) {
                     color: currentCat.color,
                     lineHeight: 1
                   }}>
-                    {displayVal}
+                    {val}
                   </div>
                   <div style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--text-muted)', marginTop: '4px' }}>
                     {currentCat.metricLabel}
@@ -251,8 +228,8 @@ export default function LeaderboardsView({ onOpenPlayer }) {
           </div>
 
           {/* FULL LEADERBOARD TABLE */}
-          <div className="card" style={{ padding: '24px' }}>
-            <h4 style={{ fontSize: '16px', marginBottom: '16px' }}>{currentCat.title}</h4>
+          <div className="card" style={{ padding: '20px' }}>
+            <h4 style={{ fontSize: '16px', marginBottom: '14px' }}>{currentCat.title}</h4>
 
             <div className="table-container">
               <table className="custom-table">
@@ -305,24 +282,6 @@ export default function LeaderboardsView({ onOpenPlayer }) {
                       <>
                         <th>Matches</th>
                         <th>Catches Taken</th>
-                      </>
-                    )}
-                    {category === 'earnings' && (
-                      <>
-                        <th>Payouts</th>
-                        <th>Prize Shares</th>
-                        <th>POM Bonuses</th>
-                        <th>Match Fees</th>
-                        <th>Total Earnings</th>
-                      </>
-                    )}
-                    {category === 'mvp' && (
-                      <>
-                        <th>Runs</th>
-                        <th>Wickets</th>
-                        <th>Catches</th>
-                        <th>Sixes</th>
-                        <th>MVP Points</th>
                       </>
                     )}
                   </tr>
@@ -390,30 +349,6 @@ export default function LeaderboardsView({ onOpenPlayer }) {
                         <>
                           <td>{p.matches}</td>
                           <td style={{ fontWeight: '800', color: 'var(--accent-cyan)' }}>{p.catches}</td>
-                        </>
-                      )}
-
-                      {category === 'earnings' && (
-                        <>
-                          <td>{p.transactions_count}</td>
-                          <td>${Number(p.prize_share).toLocaleString()}</td>
-                          <td>${Number(p.pom_bonus).toLocaleString()}</td>
-                          <td>${Number(p.match_fees).toLocaleString()}</td>
-                          <td style={{ fontWeight: '900', color: 'var(--accent-gold)' }}>
-                            ${Number(p.total_earnings).toLocaleString()}
-                          </td>
-                        </>
-                      )}
-
-                      {category === 'mvp' && (
-                        <>
-                          <td>{p.runs}</td>
-                          <td>{p.wickets}</td>
-                          <td>{p.catches}</td>
-                          <td>{p.sixes}</td>
-                          <td style={{ fontWeight: '900', color: 'var(--accent-green)' }}>
-                            {p.mvp_points}
-                          </td>
                         </>
                       )}
                     </tr>

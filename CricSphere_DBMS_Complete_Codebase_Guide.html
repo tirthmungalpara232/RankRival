@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CricSphere DBMS — Comprehensive Codebase & Architecture Guide</title>
+<style>
+  @page {
+    size: A4;
+    margin: 20mm 15mm 20mm 15mm;
+    @bottom-right {
+      content: counter(page);
+    }
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: #1e293b;
+    line-height: 1.6;
+    font-size: 13px;
+    margin: 0;
+    padding: 0;
+  }
+
+  h1, h2, h3, h4, h5 {
+    color: #0f172a;
+    font-weight: 700;
+    page-break-after: avoid;
+  }
+
+  h1 {
+    font-size: 26px;
+    border-bottom: 3px solid #00c853;
+    padding-bottom: 8px;
+    margin-top: 0;
+  }
+
+  h2 {
+    font-size: 19px;
+    border-bottom: 1.5px solid #cbd5e1;
+    padding-bottom: 6px;
+    margin-top: 28px;
+    color: #1e3a8a;
+  }
+
+  h3 {
+    font-size: 15px;
+    margin-top: 18px;
+    color: #0f766e;
+  }
+
+  h4 {
+    font-size: 13px;
+    margin-top: 12px;
+  }
+
+  p {
+    margin: 8px 0;
+    text-align: justify;
+  }
+
+  .cover-box {
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    color: #ffffff;
+    padding: 30px;
+    border-radius: 10px;
+    margin-bottom: 25px;
+    border-left: 6px solid #00e676;
+  }
+
+  .cover-box h1 {
+    color: #ffffff;
+    border-bottom: 2px solid #00e676;
+    margin-bottom: 10px;
+    font-size: 28px;
+  }
+
+  .cover-box p {
+    color: #cbd5e1;
+    font-size: 14px;
+    margin: 4px 0;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-right: 6px;
+  }
+  .badge-tech { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+  .badge-db { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+  .badge-api { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0;
+    font-size: 12px;
+    page-break-inside: avoid;
+  }
+
+  table th {
+    background-color: #f1f5f9;
+    color: #0f172a;
+    text-align: left;
+    padding: 8px 10px;
+    border: 1px solid #cbd5e1;
+    font-weight: 700;
+  }
+
+  table td {
+    padding: 7px 10px;
+    border: 1px solid #e2e8f0;
+    vertical-align: top;
+  }
+
+  table tr:nth-child(even) td {
+    background-color: #f8fafc;
+  }
+
+  code {
+    font-family: "JetBrains Mono", Consolas, Monaco, monospace;
+    font-size: 11.5px;
+    background: #f1f5f9;
+    padding: 2px 5px;
+    border-radius: 4px;
+    color: #0969da;
+  }
+
+  pre {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-left: 4px solid #3b82f6;
+    padding: 12px;
+    border-radius: 6px;
+    font-family: "JetBrains Mono", Consolas, monospace;
+    font-size: 11.5px;
+    line-height: 1.45;
+    overflow-x: auto;
+    page-break-inside: avoid;
+  }
+
+  .diagram-box {
+    background: #f0fdf4;
+    border: 1px solid #86efac;
+    border-left: 5px solid #22c55e;
+    padding: 14px;
+    border-radius: 6px;
+    margin: 14px 0;
+    font-family: monospace;
+    font-size: 12px;
+    white-space: pre;
+    page-break-inside: avoid;
+  }
+
+  .callout {
+    background: #eff6ff;
+    border-left: 4px solid #2563eb;
+    padding: 12px 14px;
+    margin: 14px 0;
+    border-radius: 4px;
+    page-break-inside: avoid;
+  }
+
+  .callout-title {
+    font-weight: 700;
+    color: #1e40af;
+    margin-bottom: 4px;
+  }
+
+  .qna-box {
+    background: #fafafa;
+    border: 1px solid #e5e5e5;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+    border-radius: 6px;
+    page-break-inside: avoid;
+  }
+
+  .qna-q {
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 4px;
+    font-size: 13px;
+  }
+
+  .qna-a {
+    color: #374151;
+    font-size: 12.5px;
+    margin: 0;
+  }
+
+  .page-break {
+    page-break-before: always;
+  }
+</style>
+</head>
+<body>
+
+<!-- COVER SECTION -->
+<div class="cover-box">
+  <h1>🏏 CRICSPHERE DBMS</h1>
+  <p><strong>Comprehensive Codebase, Database Schema & Architecture Guide</strong></p>
+  <p style="margin-top: 10px;">
+    <span class="badge badge-db">MySQL Relational Database</span>
+    <span class="badge badge-api">Node.js + Express REST API</span>
+    <span class="badge badge-tech">React 19 Frontend</span>
+    <span class="badge badge-tech">Vite Engine</span>
+  </p>
+  <p style="margin-top: 14px; font-size: 12px; color: #94a3b8;">
+    Written for: Project Presentations, External Viva Voce, Code Reviews & Architecture Defense.
+  </p>
+</div>
+
+<!-- SECTION 1 -->
+<h2>1. Project Overview & 3-Tier Architecture</h2>
+<p>
+  <strong>CricSphere</strong> is a full-stack Sports Database Management System built specifically for cricket tournament administration, match scheduling, live ball-by-ball scoring, player statistics management, and honors leaderboards.
+</p>
+
+<h3>Three-Tier Architectural Model</h3>
+<div class="diagram-box">
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 1. PRESENTATION TIER (Frontend - React 19 + Vite)                            │
+│    URL Routing: /stastics, /stadium, /tournaments, /matches, /leaderboards  │
+│    Components: Scorecard, Scorer Console, Leaderboards, Venue Cards         │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │ HTTP Requests (JSON over REST)
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 2. APPLICATION TIER (Backend - Node.js + Express Server)                    │
+│    Port: 5000 | Routes: /api/matches, /api/players, /api/tournaments, etc.  │
+│    Middleware: JWT Authentication & Role-Based Access Control               │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │ SQL Queries & Stored Procedures (mysql2)
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 3. DATA TIER (Database - MySQL Relational Database)                         │
+│    Port: 3306 | Schema: new_cricket_db                                      │
+│    Tables: tournament, teams, player, matches, match_balls, venue, stats    │
+└─────────────────────────────────────────────────────────────────────────────┘
+</div>
+
+<ul>
+  <li><strong>Presentation Tier (Client)</strong>: Built with React 19. It communicates asynchronously with the backend using the Fetch API and synchronizes browser URLs with the HTML5 History API (without reloading).</li>
+  <li><strong>Application Tier (Server)</strong>: Built with Express.js. It authenticates users, enforces security roles (Player, Organizer, Admin), and runs SQL queries against MySQL.</li>
+  <li><strong>Data Tier (Database)</strong>: A normalized MySQL relational database maintaining ACID guarantees, primary keys, foreign keys, and stored procedures for complex multi-table transactional updates.</li>
+</ul>
+
+<!-- SECTION 2 -->
+<h2>2. Database Schema & Relational Modeling (Data Tier)</h2>
+<p>
+  The database schema stores all entities of a real-world cricket ecosystem. Below is the relational mapping of the key database tables:
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width: 22%;">Table Name</th>
+      <th style="width: 28%;">Primary & Foreign Keys</th>
+      <th>Description & Role in DBMS</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>tournament</code></td>
+      <td><code>PK: tournament_id</code><br><code>FK: type_id &rarr; tournament_type</code></td>
+      <td>Master table for tournaments (e.g. <em>Southern Cup T20</em>). Contains start date, end date, host country, and format reference.</td>
+    </tr>
+    <tr>
+      <td><code>teams</code></td>
+      <td><code>PK: team_id</code><br><code>FK: country_id &rarr; country</code></td>
+      <td>National and club teams. Contains team name, coach, founded year, and foreign key to country.</td>
+    </tr>
+    <tr>
+      <td><code>player</code></td>
+      <td><code>PK: player_id</code><br><code>FK: team_id &rarr; teams</code><br><code>FK: country_id &rarr; country</code></td>
+      <td>Master directory of all 124+ athletes. Stores first name, last name, jersey number, batting style, bowling style, and playing role.</td>
+    </tr>
+    <tr>
+      <td><code>venue</code></td>
+      <td><code>PK: venue_id</code><br><code>FK: country_id &rarr; country</code></td>
+      <td>Directory of 20 international cricket stadiums. Stores venue name, city, seating capacity, and pitch type (<em>Spin, Pace, Flat</em>).</td>
+    </tr>
+    <tr>
+      <td><code>matches</code></td>
+      <td><code>PK: match_id</code><br><code>FK: tournament_id, venue_id</code><br><code>FK: team1_id, team2_id</code></td>
+      <td>Scheduled, Live, or Completed fixtures. Tracks toss decision, winner team, winning margin, win type, and Player of the Match.</td>
+    </tr>
+    <tr>
+      <td><code>match_balls</code></td>
+      <td><code>PK: ball_id</code><br><code>FK: match_id &rarr; matches</code><br><code>FK: striker_id, bowler_id</code></td>
+      <td>Granular ball-by-ball deliver log. Records over number, ball number, runs, extras, extra type, wicket flag (<code>is_wicket</code>), and commentary text.</td>
+    </tr>
+    <tr>
+      <td><code>player_match_stats</code></td>
+      <td><code>PK: stat_id</code><br><code>FK: match_id, player_id, team_id</code></td>
+      <td>Individual scorecard per match. Stores runs scored, balls faced, boundaries (4s/6s), dismissal mode, overs bowled, runs conceded, and wickets taken.</td>
+    </tr>
+    <tr>
+      <td><code>users</code></td>
+      <td><code>PK: user_id</code><br><code>FK: player_id &rarr; player</code> (optional)</td>
+      <td>Authentication credentials with bcrypt password hash and role (<em>Player, Organizer, Admin</em>).</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <div class="callout-title">💡 DBMS Examiner Note: Primary Key & Foreign Key Constraints</div>
+  All relationships enforce referential integrity. For example, in <code>matches</code>, <code>team1_id</code> and <code>team2_id</code> reference <code>teams(team_id)</code>. A match cannot exist without valid teams, and a ball cannot be logged without valid player and match foreign keys.
+</div>
+
+<div class="page-break"></div>
+
+<!-- SECTION 3 -->
+<h2>3. Backend Architecture & Route Directory (Application Tier)</h2>
+<p>
+  The backend server is structured inside the <code>server/</code> folder. Below is the file-by-file breakdown:
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width: 25%;">File Path</th>
+      <th style="width: 20%;">HTTP Endpoints</th>
+      <th>Functionality & Internal Working</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>server/index.js</code></td>
+      <td><code>GET /api/overview</code><br><code>GET /api/health</code></td>
+      <td>Entry point for Express. Sets up CORS, JSON body parser, registers sub-routers, and queries aggregate platform statistics (total players, total tournaments, matches, venues, format counts).</td>
+    </tr>
+    <tr>
+      <td><code>server/db.js</code></td>
+      <td>Internal database pool</td>
+      <td>Configures <code>mysql2/promise</code> connection pool using credentials from <code>.env</code>. Exports <code>query()</code>, <code>get()</code>, <code>run()</code>, and <code>call()</code> helpers.</td>
+    </tr>
+    <tr>
+      <td><code>server/routes/venues.js</code></td>
+      <td><code>GET /api/venues</code></td>
+      <td>Fetches all 20 stadiums with city, country, pitch condition, seating capacity, and count of matches hosted.</td>
+    </tr>
+    <tr>
+      <td><code>server/routes/players.js</code></td>
+      <td><code>GET /api/players</code><br><code>GET /api/players/:id</code><br><code>GET /api/players/compare/:id1/:id2</code></td>
+      <td>Uses direct standard SQL queries with joins. Supports search by player name, role filter, team filter, career batting averages, strike rates, and side-by-side player comparisons.</td>
+    </tr>
+    <tr>
+      <td><code>server/routes/matches.js</code></td>
+      <td><code>GET /api/matches</code><br><code>GET /api/matches/:id</code><br><code>POST /:id/score-ball</code><br><code>POST /:id/complete</code></td>
+      <td>Handles live scoring. Returns full match scorecard, fall of wickets, bowling analysis, and ball-by-ball history. Protected by <code>requireOrganizerOrAdmin</code> middleware.</td>
+    </tr>
+    <tr>
+      <td><code>server/routes/leaderboards.js</code></td>
+      <td><code>GET /api/leaderboards</code></td>
+      <td>Computes honors board rankings based on category query: <code>orange_cap</code>, <code>purple_cap</code>, <code>strike_rate</code>, <code>sixes</code>, and <code>fielding</code>.</td>
+    </tr>
+    <tr>
+      <td><code>server/routes/tournaments.js</code></td>
+      <td><code>GET /api/tournaments</code><br><code>GET /api/tournaments/:id</code><br><code>POST /api/tournaments</code></td>
+      <td>Manages tournament creation, team registrations, fixture scheduling, and calculates the live <strong>Points Table</strong> (Matches, Wins, Losses, Points, NRR).</td>
+    </tr>
+    <tr>
+      <td><code>server/routes/auth.js</code></td>
+      <td><code>POST /api/auth/register</code><br><code>POST /api/auth/login</code></td>
+      <td>Handles user registration and authentication using <code>bcryptjs</code> password hashing and signs <code>jsonwebtoken</code> (JWT) with user roles.</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- SECTION 4 -->
+<h2>4. Frontend Architecture & URL Routing (Presentation Tier)</h2>
+<p>
+  The frontend is built using React 19 inside the <code>client/src/</code> directory.
+</p>
+
+<h3>URL Path Routing (Single-Page Application)</h3>
+<p>
+  Instead of hard reloads, the application uses the HTML5 History API (<code>window.history.pushState</code> and <code>window.addEventListener('popstate')</code>) implemented inside <code>client/src/App.jsx</code>:
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width: 25%;">Browser URL</th>
+      <th style="width: 20%;">Internal Tab State</th>
+      <th style="width: 25%;">React View Component</th>
+      <th>Rendered Content</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>http://localhost:5173/stastics</code></td>
+      <td><code>'overview'</code></td>
+      <td><code>OverviewStatsView.jsx</code></td>
+      <td>Total players (124), tournaments (5), matches (42), stadiums (20), aggregate runs and format distribution.</td>
+    </tr>
+    <tr>
+      <td><code>http://localhost:5173/stadium</code></td>
+      <td><code>'stadiums'</code></td>
+      <td><code>StadiumsView.jsx</code></td>
+      <td>Directory of 20 cricket stadiums with pitch condition filter (Spin, Pace, Flat) and search.</td>
+    </tr>
+    <tr>
+      <td><code>http://localhost:5173/tournaments</code></td>
+      <td><code>'tournaments'</code></td>
+      <td><code>TournamentsView.jsx</code></td>
+      <td>Tournament cards, points table, knockout brackets, and fixture scheduler.</td>
+    </tr>
+    <tr>
+      <td><code>http://localhost:5173/matches</code></td>
+      <td><code>'matches'</code></td>
+      <td><code>LiveMatchCenterView.jsx</code></td>
+      <td>Live scoreboard banner, interactive ball-by-ball scorer keypad, and official innings scorecard.</td>
+    </tr>
+    <tr>
+      <td><code>http://localhost:5173/leaderboards</code></td>
+      <td><code>'leaderboards'</code></td>
+      <td><code>LeaderboardsView.jsx</code></td>
+      <td>The Cricket Honors Board (Orange Cap, Purple Cap, Strike Rate, Boundaries, Fielding).</td>
+    </tr>
+    <tr>
+      <td><code>http://localhost:5173/players</code></td>
+      <td><code>'players'</code></td>
+      <td><code>PlayersView.jsx</code></td>
+      <td>Player search directory, playing roles, and Head-to-Head Comparison tool.</td>
+    </tr>
+    <tr>
+      <td><code>http://localhost:5173/teams</code></td>
+      <td><code>'teams'</code></td>
+      <td><code>TeamsView.jsx</code></td>
+      <td>Cricket teams, coaching staff, and official squad rosters.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="page-break"></div>
+
+<!-- SECTION 5 -->
+<h2>5. Detailed Walkthrough of Core Features & Solved Challenges</h2>
+
+<h3>1. How the Live Score & Wicket Logic Works</h3>
+<div class="diagram-box">
+User clicks 'W' (Wicket) in LiveMatchCenterView
+  │
+  ▼
+Calls api.scoreBall(matchId, { is_wicket: 1, striker_id: 14, bowler_id: 107 })
+  │
+  ▼
+MySQL executes sp_ScoreBall:
+  1. Inserts row into `match_balls` with is_wicket = 1, commentary = 'OUT!...'
+  2. Updates `player_match_stats` for striker: is_out = 1, dismissal_type = 'Caught'
+  3. Updates `player_match_stats` for bowler: wickets_taken = wickets_taken + 1
+  │
+  ▼
+Frontend receives updated match state:
+  1. Wickets calculated accurately: Math.min(10, Math.max(battingOut, bowlerWkts, ballWkts))
+  2. Striker auto-advances to the next available batsman in team squad
+  3. Dismissed player marked ❌ (Out) and disabled in dropdown
+</div>
+
+<p>
+  <strong>The Problem Solved</strong>: Previously, wickets were only calculated by counting rows in <code>team1Batting</code> where <code>is_out = 1</code>. Because the striker was never auto-rotated when a wicket fell, no new rows were created for subsequent batsmen, causing the live score to stall at 2 wickets. The new algorithm accurately counts all fallen wickets from balls, bowling figures, and batting rows, while advancing the batsman in the squad automatically.
+</p>
+
+<h3>2. The Live Points Table & Net Run Rate (NRR) Formula</h3>
+<p>
+  In tournament standings, teams are ranked by Points first, and then by <strong>Net Run Rate (NRR)</strong>. NRR is computed inside the database query as:
+</p>
+<pre>
+NRR = (Total Runs Scored / Total Overs Faced) - (Total Runs Conceded / Total Overs Bowled)
+</pre>
+<p>
+  Wins award <strong>2 points</strong>, ties award <strong>1 point</strong>, and losses award <strong>0 points</strong>.
+</p>
+
+<!-- SECTION 6 -->
+<h2>6. How to Read and Learn the Codebase (6-Step Order)</h2>
+<p>
+  When studying or explaining the code, navigate through the files in this precise sequence:
+</p>
+
+<ol>
+  <li><strong>Database Layer</strong>: Open <code>server/.env</code> and <code>server/db.js</code> to understand how the connection pool connects to MySQL.</li>
+  <li><strong>Server Entry Point</strong>: Open <code>server/index.js</code> to see how routes are mounted on Express.</li>
+  <li><strong>Simple Route</strong>: Open <code>server/routes/venues.js</code> (17 lines) to understand the simplest database read query.</li>
+  <li><strong>Advanced Route</strong>: Open <code>server/routes/players.js</code> to understand SQL joins, multi-parameter filters, and career stat aggregations.</li>
+  <li><strong>API Bridge</strong>: Open <code>client/src/api.js</code> to see how the frontend sends HTTP requests and attaches JWT headers.</li>
+  <li><strong>Master UI Container</strong>: Open <code>client/src/App.jsx</code> and <code>client/src/components/Navbar.jsx</code> to observe how URL routing and view switching work.</li>
+</ol>
+
+<div class="page-break"></div>
+
+<!-- SECTION 7 -->
+<h2>7. Top 10 Viva & Interview Questions with Direct Answers</h2>
+
+<div class="qna-box">
+  <div class="qna-q">Q1: What is the main objective of this project?</div>
+  <p class="qna-a"><strong>Answer:</strong> To design and implement a relational database management system that automates cricket tournament administration, match scheduling, live ball-by-ball score tracking, player career metrics, and honors board leaderboards.</p>
+</div>
+
+<div class="qna-box">
+  <div class="qna-q">Q2: Why use a Relational Database (MySQL) rather than NoSQL (MongoDB)?</div>
+  <p class="qna-a"><strong>Answer:</strong> Cricket data is highly structured and relational. A match involves two specific teams, at one specific stadium, with 22 specific players. Relational integrity (Primary Keys, Foreign Keys, ACID transactions) guarantees that a ball recorded updates the bowler, batsman, match total, and tournament points table without data anomalies.</p>
+</div>
+
+<div class="qna-box">
+  <div class="qna-q">Q3: What are the primary keys and foreign keys in the live scoring module?</div>
+  <p class="qna-a"><strong>Answer:</strong> In <code>match_balls</code>, <code>ball_id</code> is the Primary Key. The Foreign Keys are <code>match_id</code> (referencing <code>matches</code>), <code>striker_id</code> (referencing <code>player</code>), and <code>bowler_id</code> (referencing <code>player</code>).</p>
+</div>
+
+<div class="qna-box">
+  <div class="qna-q">Q4: How do you prevent unauthorized users from editing live scores?</div>
+  <p class="qna-a"><strong>Answer:</strong> Through Role-Based Access Control (RBAC). The Express server uses the <code>requireOrganizerOrAdmin</code> middleware to inspect the JWT token in the HTTP Authorization header. Only users with the role 'Organizer' or 'Admin' can call the <code>/score-ball</code> and <code>/complete</code> endpoints.</p>
+</div>
+
+<div class="qna-box">
+  <div class="qna-q">Q5: How does the application update the URL path without reloading the webpage?</div>
+  <p class="qna-a"><strong>Answer:</strong> Using the HTML5 History API. When a user clicks a nav tab or card, <code>window.history.pushState({}, '', targetPath)</code> updates the browser's address bar, and React conditionally renders the corresponding view component.</p>
+</div>
+
+<div class="qna-box">
+  <div class="qna-q">Q6: What happens when 10 wickets fall in a live match?</div>
+  <p class="qna-a"><strong>Answer:</strong> The system caps total wickets at 10. When the 10th wicket is recorded, the striker rotation logic detects that no eligible batsmen remain in the squad, disables the Wicket button, and alerts the scorer that the innings is complete (All Out).</p>
+</div>
+
+<div class="qna-box">
+  <div class="qna-q">Q7: How are batting averages and strike rates calculated?</div>
+  <p class="qna-a"><strong>Answer:</strong> Batting Strike Rate is <code>(Runs Scored * 100) / Balls Faced</code>. Batting Average is <code>Runs Scored / Times Dismissed (is_out)</code>. If a player has never been dismissed, their total runs represent their average.</p>
+</div>
+
+<div class="qna-box">
+  <div class="qna-q">Q8: How does the database handle stored procedures?</div>
+  <p class="qna-a"><strong>Answer:</strong> We use MySQL stored procedures like <code>sp_ScoreBall</code> for complex multi-table transactional writes where inserting a ball delivery, updating player stats, and setting match status must occur atomically.</p>
+</div>
+
+<div class="qna-box">
+  <div class="qna-q">Q9: How did you implement mobile responsiveness?</div>
+  <p class="qna-a"><strong>Answer:</strong> Through pure CSS media queries (<code>@media (max-width: 992px)</code>, <code>768px</code>, and <code>480px</code>). The scoreboard banner stacks vertically, multi-column grids collapse to single columns, and the navigation bar transforms into a mobile hamburger drawer.</p>
+</div>
+
+<div class="qna-box">
+  <div class="qna-q">Q10: What is the connection pooling strategy used in Node.js?</div>
+  <p class="qna-a"><strong>Answer:</strong> In <code>server/db.js</code>, we use <code>mysql.createPool()</code> with <code>connectionLimit: 10</code>. This reuses database connections across incoming HTTP requests rather than opening and closing a new TCP socket on every single query.</p>
+</div>
+
+<footer style="margin-top: 30px; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 12px; font-size: 11px; color: #94a3b8;">
+  CricSphere DBMS — Full-Stack Cricket Sports Database Management System • Generated for Presentation & Academic Defense
+</footer>
+
+</body>
+</html>

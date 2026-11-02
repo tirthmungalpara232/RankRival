@@ -173,7 +173,7 @@ export default function TournamentsView({
       </div>
 
       {/* Main Split Layout: Tournaments List (Left) & Tournament Detail Center (Right) */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '24px' }}>
+      <div className="tournament-split-layout" style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '24px' }}>
         {/* Left: Tournament Cards List */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           {loading ? (
@@ -210,8 +210,8 @@ export default function TournamentsView({
                       <span className="badge badge-gold">{t.format}</span>
                     </div>
 
-                    <div style={{ fontSize: '16px', fontWeight: '800', color: 'var(--accent-gold)' }}>
-                      ${Number(t.prize_money).toLocaleString()}
+                    <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--accent-green)' }}>
+                      {t.teams_count} Teams
                     </div>
                   </div>
 
@@ -287,13 +287,8 @@ export default function TournamentsView({
                 </div>
 
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Purse Pool</div>
-                  <div style={{ fontSize: '26px', fontWeight: '900', color: 'var(--accent-gold)' }}>
-                    ${Number(tournamentDetails.tournament.prize_money).toLocaleString()}
-                  </div>
                   <button 
                     className="btn btn-primary btn-sm" 
-                    style={{ marginTop: '8px' }}
                     onClick={() => onOpenParticipate(tournamentDetails.tournament)}
                   >
                     Enter Team Squad

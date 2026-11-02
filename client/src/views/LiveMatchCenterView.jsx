@@ -25,7 +25,6 @@ export default function LiveMatchCenterView({ selectedMatchId, onOpenPlayer, cur
   const [strikerId, setStrikerId] = useState('');
   const [bowlerId, setBowlerId] = useState('');
   const [customCommentary, setCustomCommentary] = useState('');
-  const [activeTab, setActiveTab] = useState('scorecard'); // 'scorecard', 'balls', 'info'
 
   // Complete match state
   const [showCompleteModal, setShowCompleteModal] = useState(false);
@@ -56,7 +55,6 @@ export default function LiveMatchCenterView({ selectedMatchId, onOpenPlayer, cur
       setMatches(allMatches);
 
       if (!currentMatchId && allMatches.length > 0) {
-        // Try finding a 'Live' match, else first match
         const live = allMatches.find(m => m.status === 'Live');
         setCurrentMatchId(live ? live.match_id : allMatches[0].match_id);
       }
@@ -71,10 +69,18 @@ export default function LiveMatchCenterView({ selectedMatchId, onOpenPlayer, cur
       const data = await api.getMatch(matchId);
       setMatchData(data);
 
-      // Pre-select striker and bowler from squads
-      if (data.team1Squad?.length > 0 && !strikerId) {
+      // Auto-select striker: pick the first batsman who is NOT already out
+      const outIds = new Set(
+        (data.team1Batting || []).filter(p => p.is_out).map(p => Number(p.player_id))
+      );
+      const availableStriker = (data.team1Squad || []).find(p => !outIds.has(Number(p.player_id)));
+
+      if (availableStriker) {
+        setStrikerId(availableStriker.player_id);
+      } else if (data.team1Squad?.length > 0) {
         setStrikerId(data.team1Squad[0].player_id);
       }
+
       if (data.team2Squad?.length > 0 && !bowlerId) {
         setBowlerId(data.team2Squad[0].player_id);
       }
@@ -120,8 +126,28 @@ export default function LiveMatchCenterView({ selectedMatchId, onOpenPlayer, cur
       });
 
       setCustomCommentary('');
-      // Reload match details
-      await loadMatchDetails(currentMatchId);
+      
+      // Reload fresh match details
+      const freshData = await api.getMatch(currentMatchId);
+      setMatchData(freshData);
+
+      // If a wicket fell, advance striker to the next batsman from the squad who is not yet out
+      if (isWicket) {
+        const outPlayerIds = new Set(
+          (freshData.team1Batting || []).filter(p => p.is_out).map(p => Number(p.player_id))
+        );
+        outPlayerIds.add(Number(strikerId));
+
+        const nextStriker = (freshData.team1Squad || []).find(
+          p => !outPlayerIds.has(Number(p.player_id))
+        );
+
+        if (nextStriker) {
+          setStrikerId(nextStriker.player_id);
+        } else {
+          alert('All Out! 10 wickets have fallen. Innings concluded.');
+        }
+      }
     } catch (err) {
       alert(err.message || 'Failed to score ball');
     } finally {
@@ -139,7 +165,7 @@ export default function LiveMatchCenterView({ selectedMatchId, onOpenPlayer, cur
         player_of_match_id: pomPlayerId ? Number(pomPlayerId) : null
       });
 
-      alert('Match successfully marked Completed and points / awards updated!');
+      alert('Match successfully marked Completed and points updated!');
       setShowCompleteModal(false);
       loadMatchDetails(currentMatchId);
       loadMatchesList();
@@ -155,17 +181,34 @@ export default function LiveMatchCenterView({ selectedMatchId, onOpenPlayer, cur
   const team2Bowling = matchData?.team2Bowling || [];
   const balls = matchData?.balls || [];
 
-  // Totals calculation
-  const t1Runs = team1Batting.reduce((sum, p) => sum + (p.runs_scored || 0), 0);
-  const t1Wickets = team1Batting.reduce((sum, p) => sum + (p.is_out ? 1 : 0), 0);
-  const t2Runs = team2Batting.reduce((sum, p) => sum + (p.runs_scored || 0), 0);
-  const t2Wickets = team2Batting.reduce((sum, p) => sum + (p.is_out ? 1 : 0), 0);
+  // Accurate Totals calculation (handles any number of wickets: 1, 2, 3... up to 10)
+  const t1RunsFromBatting = team1Batting.reduce((sum, p) => sum + (p.runs_scored || 0), 0);
+  const t1RunsFromBalls = balls.filter(b => b.batting_team_id === match?.team1_id || !b.batting_team_id).reduce((sum, b) => sum + (b.runs || 0) + (b.extras || 0), 0);
+  const t1Runs = Math.max(t1RunsFromBatting, t1RunsFromBalls);
+
+  const t1WktsFromBatting = team1Batting.reduce((sum, p) => sum + (p.is_out ? 1 : 0), 0);
+  const t1WktsFromBowling = team2Bowling.reduce((sum, p) => sum + (p.wickets_taken || 0), 0);
+  const t1WktsFromBalls = balls.filter(b => b.is_wicket && (b.batting_team_id === match?.team1_id || !b.batting_team_id)).length;
+  const t1Wickets = Math.min(10, Math.max(t1WktsFromBatting, t1WktsFromBowling, t1WktsFromBalls));
+
+  const t2RunsFromBatting = team2Batting.reduce((sum, p) => sum + (p.runs_scored || 0), 0);
+  const t2RunsFromBalls = balls.filter(b => b.batting_team_id === match?.team2_id).reduce((sum, b) => sum + (b.runs || 0) + (b.extras || 0), 0);
+  const t2Runs = Math.max(t2RunsFromBatting, t2RunsFromBalls);
+
+  const t2WktsFromBatting = team2Batting.reduce((sum, p) => sum + (p.is_out ? 1 : 0), 0);
+  const t2WktsFromBowling = team1Bowling.reduce((sum, p) => sum + (p.wickets_taken || 0), 0);
+  const t2WktsFromBalls = balls.filter(b => b.is_wicket && b.batting_team_id === match?.team2_id).length;
+  const t2Wickets = Math.min(10, Math.max(t2WktsFromBatting, t2WktsFromBowling, t2WktsFromBalls));
+
+  // Legal deliveries for overs
+  const totalLegalBalls = balls.filter(b => !b.extra_type || (b.extra_type !== 'Wide' && b.extra_type !== 'No Ball')).length;
+  const oversFormatted = `${Math.floor(totalLegalBalls / 6)}.${totalLegalBalls % 6} Overs`;
 
   return (
     <div>
       {/* Match Selector Tabs */}
-      <div style={{ marginBottom: '24px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+      <div style={{ marginBottom: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
           <h3 style={{ fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Radio size={20} color="#ef4444" /> Live Matches & Scorecards
           </h3>
@@ -178,7 +221,8 @@ export default function LiveMatchCenterView({ selectedMatchId, onOpenPlayer, cur
           display: 'flex',
           gap: '10px',
           overflowX: 'auto',
-          paddingBottom: '8px'
+          paddingBottom: '8px',
+          WebkitOverflowScrolling: 'touch'
         }}>
           {matches.map(m => {
             const isSelected = m.match_id === currentMatchId;
@@ -198,7 +242,8 @@ export default function LiveMatchCenterView({ selectedMatchId, onOpenPlayer, cur
                   fontWeight: isSelected ? '700' : '500',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '8px'
+                  gap: '8px',
+                  flexShrink: 0
                 }}
               >
                 {m.status === 'Live' && <span className="pulse-dot" style={{ width: '6px', height: '6px' }}></span>}
@@ -222,13 +267,13 @@ export default function LiveMatchCenterView({ selectedMatchId, onOpenPlayer, cur
           <div className="card" style={{
             background: 'linear-gradient(135deg, rgba(14, 23, 42, 0.95), rgba(7, 11, 20, 0.95))',
             borderColor: match.status === 'Live' ? 'rgba(239, 68, 68, 0.4)' : 'var(--border-subtle)',
-            padding: '28px',
+            padding: '24px',
             marginBottom: '24px',
             position: 'relative'
           }}>
             {/* Top tournament and status row */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                 <span className="badge badge-gold">{match.format}</span>
                 <span className="badge badge-green">{match.tournament_name}</span>
                 <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>• {match.match_stage}</span>
@@ -251,22 +296,23 @@ export default function LiveMatchCenterView({ selectedMatchId, onOpenPlayer, cur
               </div>
             </div>
 
-            {/* Scores Arena */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: '20px', padding: '16px 0' }}>
+            {/* Scores Arena - Fully Responsive */}
+            <div className="scoreboard-arena" style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: '20px', padding: '12px 0' }}>
               {/* Team 1 */}
               <div>
-                <h3 style={{ fontSize: '26px', fontWeight: '900', color: '#fff' }}>{match.team1_name}</h3>
-                <div style={{ fontSize: '36px', fontWeight: '900', color: 'var(--accent-green)', fontFamily: 'var(--font-mono)' }}>
+                <h3 style={{ fontSize: '24px', fontWeight: '900', color: '#fff' }}>{match.team1_name}</h3>
+                <div style={{ fontSize: '38px', fontWeight: '900', color: 'var(--accent-green)', fontFamily: 'var(--font-mono)' }}>
                   {t1Runs}/{t1Wickets}
                 </div>
                 <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-                  Batting First • {balls.length > 0 ? `${Math.floor(balls.length / 6)}.${balls.length % 6} Overs` : 'Overs N/A'}
+                  Batting • {balls.length > 0 ? oversFormatted : '0.0 Overs'}
+                  {t1Wickets >= 10 && <span className="badge badge-live" style={{ marginLeft: '8px', fontSize: '10px' }}>ALL OUT</span>}
                 </div>
               </div>
 
               {/* VS Divider */}
-              <div style={{ textAlign: 'center', padding: '0 20px' }}>
-                <div style={{ fontSize: '20px', fontWeight: '900', color: 'var(--text-muted)' }}>VS</div>
+              <div style={{ textAlign: 'center', padding: '0 10px' }}>
+                <div style={{ fontSize: '18px', fontWeight: '900', color: 'var(--text-muted)' }}>VS</div>
                 <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
                   {match.venue_name}
                 </div>
@@ -274,12 +320,12 @@ export default function LiveMatchCenterView({ selectedMatchId, onOpenPlayer, cur
 
               {/* Team 2 */}
               <div style={{ textAlign: 'right' }}>
-                <h3 style={{ fontSize: '26px', fontWeight: '900', color: '#fff' }}>{match.team2_name}</h3>
-                <div style={{ fontSize: '36px', fontWeight: '900', color: 'var(--accent-cyan)', fontFamily: 'var(--font-mono)' }}>
+                <h3 style={{ fontSize: '24px', fontWeight: '900', color: '#fff' }}>{match.team2_name}</h3>
+                <div style={{ fontSize: '38px', fontWeight: '900', color: 'var(--accent-cyan)', fontFamily: 'var(--font-mono)' }}>
                   {t2Runs}/{t2Wickets}
                 </div>
                 <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-                  Target / Opponent
+                  {t2Runs > 0 ? 'Innings 2' : 'Opponent'}
                 </div>
               </div>
             </div>
@@ -288,12 +334,14 @@ export default function LiveMatchCenterView({ selectedMatchId, onOpenPlayer, cur
             <div style={{
               background: 'rgba(255,255,255,0.03)',
               borderRadius: 'var(--radius-md)',
-              padding: '12px 18px',
+              padding: '12px 16px',
               marginTop: '14px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              fontSize: '13px'
+              fontSize: '13px',
+              flexWrap: 'wrap',
+              gap: '8px'
             }}>
               <div>
                 {match.winner_team_name ? (
@@ -319,23 +367,23 @@ export default function LiveMatchCenterView({ selectedMatchId, onOpenPlayer, cur
           </div>
 
           {/* Scorer Console Grid (Live Simulator for Organizers) OR Spectator Center (for Players) */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '24px', marginBottom: '28px' }}>
+          <div className="scorer-layout-grid" style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '20px', marginBottom: '28px' }}>
             {currentUser && (currentUser.role === 'Organizer' || currentUser.role === 'Admin') ? (
               /* Left: Interactive Scorer Console (Organizers/Admins Only) */
-              <div className="card" style={{ padding: '24px', background: 'rgba(15, 23, 42, 0.85)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+              <div className="card" style={{ padding: '20px', background: 'rgba(15, 23, 42, 0.85)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
                   <h4 style={{ fontSize: '17px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <Zap size={18} color="var(--accent-green)" /> Official Match Scorer Console
                   </h4>
                   <span className="badge badge-green" style={{ fontSize: '10px' }}>Organizer Access</span>
                 </div>
 
-                <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
-                  Click below to record runs, boundaries, and wickets. Instantly updates batsman/bowler stats, runs table, and generates commentary!
+                <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '14px' }}>
+                  Record runs and wickets ball-by-ball. Batters out are automatically rotated to the next player in the squad!
                 </p>
 
                 {/* Striker & Bowler Selection */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
                   <div>
                     <label className="form-label" style={{ fontSize: '12px' }}>🏏 Striker ({match.team1_name})</label>
                     <select 
@@ -343,11 +391,15 @@ export default function LiveMatchCenterView({ selectedMatchId, onOpenPlayer, cur
                       value={strikerId}
                       onChange={e => setStrikerId(e.target.value)}
                     >
-                      {matchData.team1Squad?.map(p => (
-                        <option key={p.player_id} value={p.player_id}>
-                          {p.player_name} ({p.player_role})
-                        </option>
-                      ))}
+                      {matchData.team1Squad?.map(p => {
+                        const isOut = team1Batting.some(b => Number(b.player_id) === Number(p.player_id) && b.is_out);
+                        const playerName = p.player_name || `${p.first_name || ''} ${p.last_name || ''}`.trim() || `Player #${p.player_id}`;
+                        return (
+                          <option key={p.player_id} value={p.player_id} disabled={isOut}>
+                            {isOut ? `❌ ${playerName} (Out)` : `${playerName} (${p.player_role})`}
+                          </option>
+                        );
+                      })}
                     </select>
                   </div>
 
@@ -358,11 +410,14 @@ export default function LiveMatchCenterView({ selectedMatchId, onOpenPlayer, cur
                       value={bowlerId}
                       onChange={e => setBowlerId(e.target.value)}
                     >
-                      {matchData.team2Squad?.map(p => (
-                        <option key={p.player_id} value={p.player_id}>
-                          {p.player_name} ({p.player_role})
-                        </option>
-                      ))}
+                      {matchData.team2Squad?.map(p => {
+                        const playerName = p.player_name || `${p.first_name || ''} ${p.last_name || ''}`.trim() || `Player #${p.player_id}`;
+                        return (
+                          <option key={p.player_id} value={p.player_id}>
+                            {playerName} ({p.player_role})
+                          </option>
+                        );
+                      })}
                     </select>
                   </div>
                 </div>
@@ -372,7 +427,7 @@ export default function LiveMatchCenterView({ selectedMatchId, onOpenPlayer, cur
                   <input 
                     type="text" 
                     className="form-input" 
-                    placeholder="Optional custom commentary (or leave blank for smart auto-commentary)..."
+                    placeholder="Optional custom commentary (or leave blank for auto-commentary)..."
                     value={customCommentary}
                     onChange={e => setCustomCommentary(e.target.value)}
                   />
@@ -437,10 +492,11 @@ export default function LiveMatchCenterView({ selectedMatchId, onOpenPlayer, cur
                   <button 
                     className="scorer-btn scorer-btn-wicket"
                     onClick={() => handleScoreBall(0, true, 'Caught')}
-                    disabled={scoring}
+                    disabled={scoring || t1Wickets >= 10}
+                    title={t1Wickets >= 10 ? 'All 10 wickets are already down' : 'Record Wicket'}
                   >
                     W 💥
-                    <span className="label">Wicket</span>
+                    <span className="label">{t1Wickets >= 10 ? 'All Out' : 'Wicket'}</span>
                   </button>
 
                   <button 
@@ -455,7 +511,7 @@ export default function LiveMatchCenterView({ selectedMatchId, onOpenPlayer, cur
               </div>
             ) : (
               /* Left: Read-Only Match Watch Center (For Players / Visitors) */
-              <div className="card" style={{ padding: '24px', background: 'rgba(15, 23, 42, 0.85)' }}>
+              <div className="card" style={{ padding: '20px', background: 'rgba(15, 23, 42, 0.85)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
                   <h4 style={{ fontSize: '17px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <Radio size={18} color="#ef4444" /> Live Stadium Broadcast & Over Tracker
@@ -474,14 +530,14 @@ export default function LiveMatchCenterView({ selectedMatchId, onOpenPlayer, cur
                   fontSize: '13px'
                 }}>
                   <div style={{ color: 'var(--accent-cyan)', fontWeight: '700', marginBottom: '4px' }}>
-                    🔒 Read-Only Match Center
+                    Live Match Scorecard
                   </div>
                   <div style={{ color: 'var(--text-secondary)' }}>
-                    As a signed-in <strong>Player</strong>, you can follow live overs, review player scorecards, and read the real-time commentary stream. Modifying live match scorecards is restricted to accredited <strong>Tournament Organizers</strong> and Match Officials.
+                    Follow live overs, review player batting and bowling scorecards, and read the real-time commentary stream.
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', marginBottom: '14px' }}>
                   <div style={{ background: 'rgba(0,0,0,0.25)', padding: '12px 14px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
                     <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>MATCH VENUE</div>
                     <div style={{ fontSize: '14px', fontWeight: '700', marginTop: '2px' }}>{match.venue_name}</div>
@@ -489,9 +545,9 @@ export default function LiveMatchCenterView({ selectedMatchId, onOpenPlayer, cur
                   </div>
 
                   <div style={{ background: 'rgba(0,0,0,0.25)', padding: '12px 14px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
-                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>TOURNAMENT FORMAT</div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>FORMAT & OVERS</div>
                     <div style={{ fontSize: '14px', fontWeight: '700', marginTop: '2px' }}>{match.format} ({match.overs_per_innings ? `${match.overs_per_innings} Overs` : 'Multi-day'})</div>
-                    <div style={{ fontSize: '12px', color: 'var(--accent-gold)' }}>Prize Pool: ${Number(match.prize_money).toLocaleString()}</div>
+                    <div style={{ fontSize: '12px', color: 'var(--accent-green)' }}>Status: {match.status}</div>
                   </div>
                 </div>
 
@@ -506,7 +562,7 @@ export default function LiveMatchCenterView({ selectedMatchId, onOpenPlayer, cur
                   alignItems: 'center'
                 }}>
                   <span style={{ color: 'var(--text-secondary)' }}>
-                    Official Umpires: <strong>{matchData.umpires?.map(u => u.umpire_name).join(', ') || 'ICC Accredited'}</strong>
+                    Umpires: <strong>{matchData.umpires?.map(u => u.umpire_name).join(', ') || 'Official Match Umpires'}</strong>
                   </span>
                   <span className="badge badge-green" style={{ fontSize: '10px' }}>
                     Live Synchronized
@@ -516,12 +572,12 @@ export default function LiveMatchCenterView({ selectedMatchId, onOpenPlayer, cur
             )}
 
             {/* Right: Live Commentary Feed */}
-            <div className="card" style={{ padding: '24px', maxHeight: '420px', display: 'flex', flexDirection: 'column' }}>
-              <h4 style={{ fontSize: '16px', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div className="card" style={{ padding: '20px', maxHeight: '420px', display: 'flex', flexDirection: 'column' }}>
+              <h4 style={{ fontSize: '16px', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Sparkles size={18} color="var(--accent-gold)" /> Live Commentary Stream
               </h4>
 
-              <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {balls.length === 0 ? (
                   <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)', fontSize: '13px' }}>
                     No balls recorded yet. Use the console on the left to start scoring!
@@ -553,19 +609,19 @@ export default function LiveMatchCenterView({ selectedMatchId, onOpenPlayer, cur
           </div>
 
           {/* Full Match Scorecard */}
-          <div className="card" style={{ padding: '28px' }}>
+          <div className="card" style={{ padding: '24px' }}>
             <h3 style={{ fontSize: '20px', marginBottom: '18px' }}>
               Official Match Scorecard
             </h3>
 
             {/* Innings 1 Batting */}
             <div style={{ marginBottom: '28px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
                 <h4 style={{ fontSize: '16px', color: 'var(--accent-green)' }}>
                   {match.team1_name} Innings (Batting)
                 </h4>
-                <div style={{ fontSize: '14px', fontWeight: '800' }}>
-                  Total: {t1Runs}/{t1Wickets}
+                <div style={{ fontSize: '15px', fontWeight: '800' }}>
+                  Total: {t1Runs}/{t1Wickets} ({balls.length > 0 ? oversFormatted : '0.0 Overs'})
                 </div>
               </div>
 
@@ -589,9 +645,9 @@ export default function LiveMatchCenterView({ selectedMatchId, onOpenPlayer, cur
                           style={{ fontWeight: '700', cursor: 'pointer', color: 'var(--accent-green)' }}
                           onClick={() => onOpenPlayer(b.player_id)}
                         >
-                          {b.player_name}
+                          {b.player_name || `Player #${b.player_id}`}
                         </td>
-                        <td style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                        <td style={{ fontSize: '12px', color: b.is_out ? 'var(--live-red)' : 'var(--accent-green)' }}>
                           {b.is_out ? (b.dismissal_type || 'Out') : 'Not out *'}
                         </td>
                         <td style={{ fontWeight: '800', color: 'var(--orange-cap)' }}>{b.runs_scored}</td>
@@ -629,7 +685,7 @@ export default function LiveMatchCenterView({ selectedMatchId, onOpenPlayer, cur
                           style={{ fontWeight: '700', cursor: 'pointer', color: 'var(--purple-cap)' }}
                           onClick={() => onOpenPlayer(bw.player_id)}
                         >
-                          {bw.player_name}
+                          {bw.player_name || `Player #${bw.player_id}`}
                         </td>
                         <td>{bw.overs_bowled}</td>
                         <td>{bw.runs_conceded}</td>
@@ -645,11 +701,11 @@ export default function LiveMatchCenterView({ selectedMatchId, onOpenPlayer, cur
             {/* Innings 2 Batting (if exists) */}
             {team2Batting.length > 0 && (
               <div style={{ marginBottom: '28px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
                   <h4 style={{ fontSize: '16px', color: 'var(--accent-cyan)' }}>
                     {match.team2_name} Innings (Batting)
                   </h4>
-                  <div style={{ fontSize: '14px', fontWeight: '800' }}>
+                  <div style={{ fontSize: '15px', fontWeight: '800' }}>
                     Total: {t2Runs}/{t2Wickets}
                   </div>
                 </div>
@@ -674,9 +730,9 @@ export default function LiveMatchCenterView({ selectedMatchId, onOpenPlayer, cur
                             style={{ fontWeight: '700', cursor: 'pointer', color: 'var(--accent-cyan)' }}
                             onClick={() => onOpenPlayer(b.player_id)}
                           >
-                            {b.player_name}
+                            {b.player_name || `Player #${b.player_id}`}
                           </td>
-                          <td style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                          <td style={{ fontSize: '12px', color: b.is_out ? 'var(--live-red)' : 'var(--accent-green)' }}>
                             {b.is_out ? (b.dismissal_type || 'Out') : 'Not out *'}
                           </td>
                           <td style={{ fontWeight: '800', color: 'var(--orange-cap)' }}>{b.runs_scored}</td>
@@ -726,16 +782,20 @@ export default function LiveMatchCenterView({ selectedMatchId, onOpenPlayer, cur
               </div>
 
               <div className="form-group">
-                <label className="form-label">Player of the Match (POM Award + $15,000 Bonus)</label>
+                <label className="form-label">Player of the Match (POM Award)</label>
                 <select className="form-select" value={pomPlayerId} onChange={e => setPomPlayerId(e.target.value)}>
                   <optgroup label={match.team1_name}>
                     {matchData.team1Squad?.map(p => (
-                      <option key={p.player_id} value={p.player_id}>{p.player_name}</option>
+                      <option key={p.player_id} value={p.player_id}>
+                        {p.player_name || `${p.first_name} ${p.last_name}`}
+                      </option>
                     ))}
                   </optgroup>
                   <optgroup label={match.team2_name}>
                     {matchData.team2Squad?.map(p => (
-                      <option key={p.player_id} value={p.player_id}>{p.player_name}</option>
+                      <option key={p.player_id} value={p.player_id}>
+                        {p.player_name || `${p.first_name} ${p.last_name}`}
+                      </option>
                     ))}
                   </optgroup>
                 </select>

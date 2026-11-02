@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 
-// Main Leaderboards endpoint - Powered by MySQL Stored Procedures
+// Main Leaderboards endpoint
 router.get('/', async (req, res) => {
   try {
     const { category = 'orange_cap', tournament_id = 'all', limit = 20 } = req.query;
@@ -32,13 +32,8 @@ router.get('/', async (req, res) => {
         results = await db.call('sp_GetLeaderboardFielding', [tourId, lim]);
         break;
 
-      case 'earnings': // Highest Tournament Earnings
-        results = await db.call('sp_GetLeaderboardEarnings', [tourId, lim]);
-        break;
-
-      case 'mvp': // Most Valuable Player
       default:
-        results = await db.call('sp_GetLeaderboardMVP', [tourId, lim]);
+        results = await db.call('sp_GetLeaderboardOrangeCap', [tourId, lim]);
         break;
     }
 
@@ -55,4 +50,3 @@ router.get('/', async (req, res) => {
 });
 
 module.exports = router;
-

@@ -1,24 +1,37 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import AuthModal from './components/AuthModal';
 import ConductTournamentModal from './components/ConductTournamentModal';
 import ParticipateModal from './components/ParticipateModal';
 import PlayerProfileModal from './components/PlayerProfileModal';
 import HeadToHeadModal from './components/HeadToHeadModal';
-import AwardPrizeModal from './components/AwardPrizeModal';
 
-import DashboardView from './views/DashboardView';
+import OverviewStatsView from './views/OverviewStatsView';
+import StadiumsView from './views/StadiumsView';
 import TournamentsView from './views/TournamentsView';
 import LiveMatchCenterView from './views/LiveMatchCenterView';
 import LeaderboardsView from './views/LeaderboardsView';
-import EarningsView from './views/EarningsView';
 import PlayersView from './views/PlayersView';
 import TeamsView from './views/TeamsView';
 
 import { getCurrentUser, setAuthToken, setCurrentUser } from './api';
 
+const routeMap = {
+  overview: '/stastics',
+  stastics: '/stastics',
+  statistics: '/stastics',
+  stadium: '/stadium',
+  stadiums: '/stadium',
+  tournaments: '/tournaments',
+  matches: '/matches',
+  leaderboards: '/leaderboards',
+  players: '/players',
+  teams: '/teams'
+};
+
 export default function App() {
-  const [currentTab, setCurrentTab] = useState('dashboard');
+  const navigate = useNavigate();
   const [currentUser, setUser] = useState(getCurrentUser());
 
   // Modal triggers
@@ -26,7 +39,6 @@ export default function App() {
   const [conductOpen, setConductOpen] = useState(false);
   const [participateOpen, setParticipateOpen] = useState(false);
   const [participatingTournament, setParticipatingTournament] = useState(null);
-  const [awardOpen, setAwardOpen] = useState(false);
   const [selectedPlayerId, setSelectedPlayerId] = useState(null);
   const [compareOpen, setCompareOpen] = useState(false);
   const [compareInitialId, setCompareInitialId] = useState(1);
@@ -70,15 +82,18 @@ export default function App() {
 
   function handleSelectMatch(matchId) {
     setSelectedMatchId(matchId);
-    setCurrentTab('matches');
+    navigate('/matches');
+  }
+
+  function handleInternalNavigate(dest) {
+    const target = routeMap[dest] || (dest.startsWith('/') ? dest : `/${dest}`);
+    navigate(target);
   }
 
   return (
     <div className="app-container">
       {/* Navigation Bar */}
       <Navbar 
-        currentTab={currentTab}
-        setCurrentTab={setCurrentTab}
         currentUser={currentUser}
         onOpenAuth={() => setAuthOpen(true)}
         onOpenConductTournament={handleOpenConduct}
@@ -93,62 +108,79 @@ export default function App() {
         }}
       />
 
-      {/* Main Content Arena */}
+      {/* Main Content Arena with Declarative React Router Routes */}
       <main className="main-content">
-        {currentTab === 'dashboard' && (
-          <DashboardView 
-            onNavigate={setCurrentTab}
-            onOpenConduct={handleOpenConduct}
-            onOpenPlayer={handleOpenPlayer}
-            onOpenParticipate={handleOpenParticipate}
-            currentUser={currentUser}
+        <Routes>
+          <Route path="/" element={<Navigate to="/stastics" replace />} />
+          <Route 
+            path="/stastics" 
+            element={
+              <OverviewStatsView 
+                onNavigate={handleInternalNavigate}
+                onOpenPlayer={handleOpenPlayer}
+                currentUser={currentUser}
+              />
+            } 
           />
-        )}
-
-        {currentTab === 'tournaments' && (
-          <TournamentsView 
-            onOpenConduct={handleOpenConduct}
-            onOpenParticipate={handleOpenParticipate}
-            onSelectMatch={handleSelectMatch}
-            onOpenPlayer={handleOpenPlayer}
-            currentUser={currentUser}
+          <Route path="/statistics" element={<Navigate to="/stastics" replace />} />
+          <Route 
+            path="/stadium" 
+            element={
+              <StadiumsView 
+                onSelectMatchVenue={() => navigate('/matches')}
+              />
+            } 
           />
-        )}
-
-        {currentTab === 'matches' && (
-          <LiveMatchCenterView 
-            selectedMatchId={selectedMatchId}
-            onOpenPlayer={handleOpenPlayer}
-            currentUser={currentUser}
+          <Route path="/stadiums" element={<Navigate to="/stadium" replace />} />
+          <Route 
+            path="/tournaments" 
+            element={
+              <TournamentsView 
+                onOpenConduct={handleOpenConduct}
+                onOpenParticipate={handleOpenParticipate}
+                onSelectMatch={handleSelectMatch}
+                onOpenPlayer={handleOpenPlayer}
+                currentUser={currentUser}
+              />
+            } 
           />
-        )}
-
-        {currentTab === 'leaderboards' && (
-          <LeaderboardsView 
-            onOpenPlayer={handleOpenPlayer}
+          <Route 
+            path="/matches" 
+            element={
+              <LiveMatchCenterView 
+                selectedMatchId={selectedMatchId}
+                onOpenPlayer={handleOpenPlayer}
+                currentUser={currentUser}
+              />
+            } 
           />
-        )}
-
-        {currentTab === 'earnings' && (
-          <EarningsView 
-            onOpenAward={() => setAwardOpen(true)}
-            onOpenPlayer={handleOpenPlayer}
-            currentUser={currentUser}
+          <Route 
+            path="/leaderboards" 
+            element={
+              <LeaderboardsView 
+                onOpenPlayer={handleOpenPlayer}
+              />
+            } 
           />
-        )}
-
-        {currentTab === 'players' && (
-          <PlayersView 
-            onOpenPlayer={handleOpenPlayer}
-            onOpenCompare={handleOpenCompare}
+          <Route 
+            path="/players" 
+            element={
+              <PlayersView 
+                onOpenPlayer={handleOpenPlayer}
+                onOpenCompare={handleOpenCompare}
+              />
+            } 
           />
-        )}
-
-        {currentTab === 'teams' && (
-          <TeamsView 
-            onOpenPlayer={handleOpenPlayer}
+          <Route 
+            path="/teams" 
+            element={
+              <TeamsView 
+                onOpenPlayer={handleOpenPlayer}
+              />
+            } 
           />
-        )}
+          <Route path="*" element={<Navigate to="/stastics" replace />} />
+        </Routes>
       </main>
 
       {/* Modals */}
@@ -163,7 +195,7 @@ export default function App() {
         onClose={() => setConductOpen(false)}
         onSuccess={() => {
           alert('Tournament created and conducted successfully!');
-          setCurrentTab('tournaments');
+          navigate('/tournaments');
         }}
       />
 
@@ -174,7 +206,7 @@ export default function App() {
         currentUser={currentUser}
         onSuccess={() => {
           alert('Successfully registered team for tournament!');
-          setCurrentTab('tournaments');
+          navigate('/tournaments');
         }}
       />
 
@@ -191,37 +223,28 @@ export default function App() {
         onClose={() => setCompareOpen(false)}
       />
 
-      <AwardPrizeModal 
-        isOpen={awardOpen}
-        onClose={() => setAwardOpen(false)}
-        onSuccess={() => {
-          alert('Prize payout disbursed successfully!');
-          setCurrentTab('earnings');
-        }}
-      />
-
-      {/* Modern Footer */}
+      {/* Clean Human DBMS Project Footer */}
       <footer style={{
         borderTop: '1px solid var(--border-subtle)',
         background: 'rgba(5, 9, 16, 0.95)',
-        padding: '28px 24px',
+        padding: '24px 20px',
         textAlign: 'center',
         fontSize: '13px',
         color: 'var(--text-muted)'
       }}>
-        <div style={{ maxWidth: '1440px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px' }}>
+        <div style={{ maxWidth: '1440px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span>🏏</span>
-            <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>CRICSPHERE PRO DBMS</span>
-            <span>• Full-Stack Sports Database Management System</span>
+            <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>CRICSPHERE</span>
+            <span>• Cricket Tournament Database Management System</span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
             <span className="badge badge-green" style={{ fontSize: '11px' }}>
-              ✓ MySQL & SQLite Dual-Engine
+              MySQL Database
             </span>
             <span className="badge badge-gold" style={{ fontSize: '11px' }}>
-              React 19 + Express API
+              React + Express
             </span>
           </div>
         </div>

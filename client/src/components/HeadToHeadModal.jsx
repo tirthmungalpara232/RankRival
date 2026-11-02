@@ -12,8 +12,11 @@ export default function HeadToHeadModal({ isOpen, onClose, initialPlayerId }) {
   useEffect(() => {
     if (isOpen) {
       loadPlayersList();
+      if (initialPlayerId) {
+        setPlayer1Id(initialPlayerId);
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, initialPlayerId]);
 
   useEffect(() => {
     if (isOpen && player1Id && player2Id) {
@@ -61,30 +64,28 @@ export default function HeadToHeadModal({ isOpen, onClose, initialPlayerId }) {
     const formatted2 = isCurrency ? `$${num2.toLocaleString()}` : (isDec ? num2.toFixed(2) : num2);
 
     return (
-      <div style={{ marginBottom: '16px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px', fontSize: '13px' }}>
-          <span style={{ fontWeight: p1Wins ? '800' : '500', color: p1Wins ? 'var(--accent-green)' : 'var(--text-secondary)' }}>
+      <div className="mb-4">
+        <div className="flex justify-between items-center mb-1 text-[13px]">
+          <span className={p1Wins ? 'font-extrabold text-[#00e676]' : 'font-medium text-slate-400'}>
             {formatted1} {p1Wins && '👑'}
           </span>
-          <span style={{ fontWeight: '700', textTransform: 'uppercase', fontSize: '11px', color: 'var(--text-muted)' }}>
+          <span className="font-bold uppercase text-[11px] text-slate-400 tracking-wider">
             {label}
           </span>
-          <span style={{ fontWeight: p2Wins ? '800' : '500', color: p2Wins ? 'var(--accent-gold)' : 'var(--text-secondary)' }}>
+          <span className={p2Wins ? 'font-extrabold text-[#ffd166]' : 'font-medium text-slate-400'}>
             {p2Wins && '👑'} {formatted2}
           </span>
         </div>
 
-        <div style={{ display: 'flex', height: '8px', borderRadius: '4px', overflow: 'hidden', background: 'rgba(255,255,255,0.06)' }}>
-          <div style={{
-            width: `${(num1 / (num1 + num2 || 1)) * 100}%`,
-            background: 'var(--accent-green)',
-            transition: 'width 0.4s ease'
-          }} />
-          <div style={{
-            width: `${(num2 / (num1 + num2 || 1)) * 100}%`,
-            background: 'var(--accent-gold)',
-            transition: 'width 0.4s ease'
-          }} />
+        <div className="flex h-2 rounded overflow-hidden bg-white/5">
+          <div
+            className="bg-[#00e676] transition-all duration-400 ease-out"
+            style={{ width: `${(num1 / (num1 + num2 || 1)) * 100}%` }}
+          />
+          <div
+            className="bg-[#ffd166] transition-all duration-400 ease-out"
+            style={{ width: `${(num2 / (num1 + num2 || 1)) * 100}%` }}
+          />
         </div>
       </div>
     );
@@ -92,11 +93,11 @@ export default function HeadToHeadModal({ isOpen, onClose, initialPlayerId }) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-card" onClick={e => e.stopPropagation()} style={{ maxWidth: '720px' }}>
+      <div className="modal-card max-w-[720px]" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <Swords size={22} color="var(--accent-cyan)" />
-            <h2 style={{ fontSize: '22px' }}>Head-to-Head Player Comparison</h2>
+          <div className="flex items-center gap-2.5">
+            <Swords size={22} className="text-[#00e5ff]" />
+            <h2 className="text-xl font-bold text-white">Head-to-Head Player Comparison</h2>
           </div>
           <button className="modal-close-btn" onClick={onClose}>
             <X size={18} />
@@ -104,7 +105,7 @@ export default function HeadToHeadModal({ isOpen, onClose, initialPlayerId }) {
         </div>
 
         {/* Player Selectors */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 40px 1fr', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+        <div className="grid grid-cols-[1fr_40px_1fr] items-center gap-3 mb-6">
           <div>
             <label className="form-label">Player 1</label>
             <select className="form-select" value={player1Id} onChange={e => setPlayer1Id(Number(e.target.value))}>
@@ -116,7 +117,7 @@ export default function HeadToHeadModal({ isOpen, onClose, initialPlayerId }) {
             </select>
           </div>
 
-          <div style={{ textAlign: 'center', fontWeight: '900', color: 'var(--text-muted)', fontSize: '18px' }}>
+          <div className="text-center font-black text-slate-500 text-lg select-none">
             VS
           </div>
 
@@ -133,46 +134,34 @@ export default function HeadToHeadModal({ isOpen, onClose, initialPlayerId }) {
         </div>
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
+          <div className="text-center py-10 text-slate-400">
             Comparing player data...
           </div>
         ) : p1 && p2 ? (
           <div>
             {/* Player Cards Header */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '24px' }}>
-              <div style={{
-                background: 'rgba(0, 230, 118, 0.08)',
-                border: '1px solid var(--border-glow)',
-                borderRadius: 'var(--radius-md)',
-                padding: '16px',
-                textAlign: 'center'
-              }}>
-                <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--accent-green)' }}>
+            <div className="grid grid-cols-2 gap-3.5 mb-6">
+              <div className="bg-[#00e676]/10 border border-[#00e676]/25 rounded-xl p-4 text-center">
+                <div className="text-lg font-extrabold text-[#00e676]">
                   {p1.first_name} {p1.last_name}
                 </div>
-                <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                <div className="text-xs text-slate-400 mt-0.5">
                   {p1.player_role} • {p1.team_name || p1.country_name}
                 </div>
               </div>
 
-              <div style={{
-                background: 'rgba(255, 209, 102, 0.08)',
-                border: '1px solid var(--border-gold)',
-                borderRadius: 'var(--radius-md)',
-                padding: '16px',
-                textAlign: 'center'
-              }}>
-                <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--accent-gold)' }}>
+              <div className="bg-[#ffd166]/10 border border-[#ffd166]/35 rounded-xl p-4 text-center">
+                <div className="text-lg font-extrabold text-[#ffd166]">
                   {p2.first_name} {p2.last_name}
                 </div>
-                <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                <div className="text-xs text-slate-400 mt-0.5">
                   {p2.player_role} • {p2.team_name || p2.country_name}
                 </div>
               </div>
             </div>
 
             {/* Comparison Metrics */}
-            <div style={{ background: 'rgba(0,0,0,0.2)', padding: '20px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
+            <div className="bg-black/20 p-5 rounded-xl border border-white/10">
               {renderStatComparison('Matches Played', p1.matches_played, p2.matches_played)}
               {renderStatComparison('Total Runs Scored', p1.total_runs, p2.total_runs)}
               {renderStatComparison('Batting Average', p1.batting_average, p2.batting_average, true, false, true)}
@@ -183,7 +172,6 @@ export default function HeadToHeadModal({ isOpen, onClose, initialPlayerId }) {
               {renderStatComparison('Bowling Economy', p1.economy, p2.economy, false, false, true)}
               {renderStatComparison('Catches Taken', p1.total_catches, p2.total_catches)}
               {renderStatComparison('Player of Matches (POM)', p1.pom_awards, p2.pom_awards)}
-              {renderStatComparison('Total Career Earnings ($)', p1.total_earnings, p2.total_earnings, true, true)}
             </div>
           </div>
         ) : null}

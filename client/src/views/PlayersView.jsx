@@ -6,7 +6,6 @@ import {
   Shield, 
   Trophy, 
   Award, 
-  CircleDollarSign,
   Filter
 } from 'lucide-react';
 import { api } from '../api';
@@ -58,33 +57,31 @@ export default function PlayersView({ onOpenPlayer, onOpenCompare }) {
       {/* Header & Head-to-Head Launcher */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '14px' }}>
         <div>
-          <h2 style={{ fontSize: '28px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <Users size={28} color="var(--accent-green)" /> Professional Cricketers Directory
+          <h2 style={{ fontSize: '26px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <Users size={26} color="var(--accent-green)" /> Cricketers Directory
           </h2>
-          <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
-            Search 124+ international athletes, review tournament participation, and compare career statistics
+          <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+            Search international players, review tournament statistics, and compare head-to-head records
           </p>
         </div>
 
-        <button className="btn btn-primary" onClick={() => onOpenCompare(1, 15)}>
+        <button className="btn btn-primary" onClick={() => onOpenCompare(2, 25)}>
           <Swords size={16} /> Compare Players Head-to-Head
         </button>
       </div>
 
       {/* Filter Bar */}
       <div className="card" style={{ padding: '16px 20px', marginBottom: '24px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr', gap: '14px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
           <div>
             <label className="form-label">Search Player or Team</label>
-            <div style={{ position: 'relative' }}>
-              <input 
-                type="text" 
-                className="form-input" 
-                placeholder="Search by name (e.g. Tanmay, Liam, Haris)..."
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-              />
-            </div>
+            <input 
+              type="text" 
+              className="form-input" 
+              placeholder="Search by name (e.g. Tanmay, Liam, Haris)..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
           </div>
 
           <div>
@@ -201,12 +198,12 @@ export default function PlayersView({ onOpenPlayer, onOpenCompare }) {
                 </div>
               </div>
 
-              {/* Earnings & View Profile action */}
+              {/* Batting/Bowling style and View Profile action */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '8px', borderTop: '1px solid var(--border-subtle)' }}>
                 <div>
-                  <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>CAREER EARNINGS</div>
-                  <div style={{ fontSize: '14px', fontWeight: '800', color: 'var(--accent-gold)' }}>
-                    ${Number(p.total_earnings).toLocaleString()}
+                  <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>HIGHEST SCORE</div>
+                  <div style={{ fontSize: '14px', fontWeight: '800', color: 'var(--orange-cap)' }}>
+                    {p.highest_score || 0} Runs
                   </div>
                 </div>
 
